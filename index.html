@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مكتب التلواني للنقل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        #map { height: 50vh; width: 100%; }
+        .pac-container { z-index: 10000 !important; font-family: sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-screen">
+
+    <!-- الشعار والرأس -->
+    <header class="bg-white shadow-md py-4 text-center z-10">
+        <h1 class="text-2xl font-bold text-gray-800">مكتب التلواني للنقل</h1>
+    </header>
+
+    <!-- الخريطة -->
+    <div id="map" class="flex-grow w-full"></div>
+
+    <!-- لوحة التحكم السفلية -->
+    <div class="bg-white rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-6 z-20 w-full pb-8">
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">التحميل من:</label>
+            <input id="origin-input" type="text" placeholder="ابحث عن موقع التحميل..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">التنزيل إلى:</label>
+            <input id="destination-input" type="text" placeholder="ابحث عن موقع التنزيل..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <button onclick="calculateRoute()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition duration-200">
+            حساب النولون
+        </button>
+
+        <!-- النتيجة -->
+        <div id="result-box" class="hidden mt-6 p-4 bg-gray-100 rounded-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-600">المسافة (اتجاه واحد):</span>
+                <span id="distance-val" class="font-bold text-gray-800">0 كم</span>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-600">إجمالي نولون النقل:</span>
+                <span id="nolon-val" class="font-bold text-blue-600 text-xl">0 ج.م</span>
+            </div>
+            <hr class="my-2 border-gray-300">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-500 text-sm">استحقاق السائق:</span>
+                <span id="driver-val" class="font-bold text-gray-700 text-sm">0 ج.م</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- سكربت خرائط جوجل وحساب التكلفة -->
+    <script>
+        let map, directionsService, directionsRenderer;
+        
+        // ثوابت حساب التسعيرة (يمكنك تعديل الأرقام لاحقاً)
+        const FUEL_COST_PER_KM = 8; // تكلفة الكيلومتر
+        const TOLLS = 150; // الكارتات
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 30.3800, lng: 30.5100 }, // نقطة البداية الافتراضية
+                zoom: 12,
+                disableDefaultUI: true
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            // تفعيل القائمة المنسدلة للبحث
+            new google.maps.places.Autocomplete(document.getElementById("origin-input"));
+            new google.maps.places.Autocomplete(document.getElementById("destination-input"));
+        }
+
+        function calculateRoute() {
+            const origin = document.getElementById("origin-input").value;
+            const destination = document.getElementById("destination-input").value;
+
+            if (!origin || !destination) {
+                alert("يرجى إدخال نقطة التحميل ونقطة التنزيل");
+                return;
+            }
+
+            directionsService.route({
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING,
+            }, (response, status) => {
+                if (status === "OK") {
+                    directionsRenderer.setDirections(response);
+                    
+                    const distanceInMeters = response.routes[0].legs[0].distance.value;
+                    const distanceInKm = distanceInMeters / 1000;
+                    
+                    // حساب المسافة ذهاباً وإياباً
+                    const roundTripDistance = distanceInKm * 2;
+                    
+                    // حساب النولون: (المسافة الكلية * تكلفة الكيلومتر) + الكارتات
+                    const basicNolon = (roundTripDistance * FUEL_COST_PER_KM) + TOLLS;
+                    
+                    // حساب استحقاق السائق (15% من النولون)
+                    const driverShare = basicNolon * 0.15;
+
+                    document.getElementById("distance-val").innerText = distanceInKm.toFixed(1) + " كم";
+                    document.getElementById("nolon-val").innerText = Math.round(basicNolon) + " ج.م";
+                    document.getElementById("driver-val").innerText = Math.round(driverShare) + " ج.م";
+                    
+                    document.getElementById("result-box").classList.remove("hidden");
+                } else {
+                    alert("لم نتمكن من حساب المسار. تأكد من العناوين المدخلة.");
+                }
+            });
+        }
+    </script>
+    
+    <!-- ضع مفتاح API الخاص بك مكان YOUR_API_KEY -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
