@@ -41,17 +41,12 @@
         <!-- النتيجة -->
         <div id="result-box" class="hidden mt-6 p-4 bg-gray-100 rounded-xl border border-gray-200">
             <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">المسافة (اتجاه واحد):</span>
+                <span class="text-gray-600">مسافة الرحلة:</span>
                 <span id="distance-val" class="font-bold text-gray-800">0 كم</span>
             </div>
-            <div class="flex justify-between items-center mb-2">
+            <div class="flex justify-between items-center">
                 <span class="text-gray-600">إجمالي نولون النقل:</span>
                 <span id="nolon-val" class="font-bold text-blue-600 text-xl">0 ج.م</span>
-            </div>
-            <hr class="my-2 border-gray-300">
-            <div class="flex justify-between items-center">
-                <span class="text-gray-500 text-sm">استحقاق السائق:</span>
-                <span id="driver-val" class="font-bold text-gray-700 text-sm">0 ج.م</span>
             </div>
         </div>
     </div>
@@ -59,14 +54,10 @@
     <!-- سكربت خرائط جوجل وحساب التكلفة -->
     <script>
         let map, directionsService, directionsRenderer;
-        
-        // ثوابت حساب التسعيرة (يمكنك تعديل الأرقام لاحقاً)
-        const FUEL_COST_PER_KM = 8; // تكلفة الكيلومتر
-        const TOLLS = 150; // الكارتات
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 30.3800, lng: 30.5100 }, // نقطة البداية الافتراضية
+                center: { lat: 30.3800, lng: 30.5100 },
                 zoom: 12,
                 disableDefaultUI: true
             });
@@ -75,7 +66,6 @@
             directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setMap(map);
 
-            // تفعيل القائمة المنسدلة للبحث
             new google.maps.places.Autocomplete(document.getElementById("origin-input"));
             new google.maps.places.Autocomplete(document.getElementById("destination-input"));
         }
@@ -100,18 +90,37 @@
                     const distanceInMeters = response.routes[0].legs[0].distance.value;
                     const distanceInKm = distanceInMeters / 1000;
                     
-                    // حساب المسافة ذهاباً وإياباً
-                    const roundTripDistance = distanceInKm * 2;
-                    
-                    // حساب النولون: (المسافة الكلية * تكلفة الكيلومتر) + الكارتات
-                    const basicNolon = (roundTripDistance * FUEL_COST_PER_KM) + TOLLS;
-                    
-                    // حساب استحقاق السائق (15% من النولون)
-                    const driverShare = basicNolon * 0.15;
+                    let basicNolon = 0;
+
+                    // تطبيق شرائح التسعير الخاصة بمكتب التلواني
+                    if (distanceInKm <= 25) {
+                        basicNolon = 1250;
+                    } else if (distanceInKm <= 50) {
+                        basicNolon = 1800;
+                    } else if (distanceInKm <= 70) {
+                        basicNolon = 2800;
+                    } else if (distanceInKm <= 100) {
+                        basicNolon = 3000;
+                    } else if (distanceInKm <= 150) {
+                        basicNolon = 3300;
+                    } else {
+                        // للمسافات فوق 150 كم يتم التدرج وتقليل النولون مقاربةً بمتوسط 14 جنيه للكيلو
+                        const scalePrice = 3300 + ((distanceInKm - 150) / (1200 - 150)) * (17000 - 3300);
+                        
+                        // مسافة الذهاب والعودة مضروبة في 14 جنيه
+                        const avgPriceBy14 = (distanceInKm * 2) * 14; 
+                        
+                        // أخذ المتوسط بين معادلة النسبة والتناسب ومعادلة الـ 14 جنيه
+                        basicNolon = (scalePrice + avgPriceBy14) / 2;
+                        
+                        // ضبط السعر النهائي عند الوصول لمسافة 1200 كم ليكون 17000 جنيه كحد أقصى للرحلة
+                        if (distanceInKm >= 1200) {
+                            basicNolon = 17000;
+                        }
+                    }
 
                     document.getElementById("distance-val").innerText = distanceInKm.toFixed(1) + " كم";
                     document.getElementById("nolon-val").innerText = Math.round(basicNolon) + " ج.م";
-                    document.getElementById("driver-val").innerText = Math.round(driverShare) + " ج.م";
                     
                     document.getElementById("result-box").classList.remove("hidden");
                 } else {
