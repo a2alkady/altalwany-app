@@ -6,58 +6,112 @@
     <title>مكتب التلواني للنقل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
+    
+    <!-- خط Cairo العربي من جوجل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- مكتبات الخرائط المجانية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
     <style>
-        body { margin: 0; padding: 0; background-color: #f9fafb; display: flex; flex-direction: column; height: 100vh; }
-        /* تم تصغير ارتفاع الخريطة هنا من 40vh إلى 30vh لتوفير مساحة أكبر للرأس ولوحة التحكم */
-        #map { flex: 1; width: 100%; min-height: 30vh; z-index: 1; background-color: #e5e7eb; }
-        .bottom-sheet { z-index: 20; background: white; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #f3f4f6; 
+            display: flex; flex-direction: column; height: 100vh; 
+            font-family: 'Cairo', sans-serif; /* تفعيل الخط الجديد */
+        }
+        #map { flex: 1; width: 100%; min-height: 35vh; z-index: 1; background-color: #e5e7eb; }
+        
+        /* تأثيرات اللوحة السفلية */
+        .bottom-sheet { 
+            z-index: 20; background: white; 
+            border-radius: 30px 30px 0 0; padding: 28px 24px; 
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.08); 
+        }
+        
+        /* تجميل شريط التمرير */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <!-- الشعار والرأس (سيظل ظاهراً بوضوح) -->
-    <header class="bg-white shadow-md py-4 text-center z-10 relative">
-        <h1 class="text-2xl font-bold text-gray-800">مكتب التلواني للنقل</h1>
+    
+    <!-- الرأس (Header) الاحترافي الجديد -->
+    <header class="bg-gradient-to-l from-blue-900 via-blue-800 to-blue-900 shadow-lg py-5 text-center z-10 relative">
+        <div class="flex items-center justify-center gap-3">
+            <!-- أيقونة الشاحنة -->
+            <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+            </svg>
+            <h1 class="text-3xl font-extrabold text-white tracking-wide" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.4);">مكتب التلواني</h1>
+        </div>
+        <p class="text-blue-200 text-sm mt-1 font-semibold">لخدمات النقل والشحن</p>
     </header>
 
-    <!-- مساحة الخريطة المُصغرة -->
+    <!-- مساحة الخريطة -->
     <div id="map"></div>
 
-    <!-- لوحة التحكم وحساب النولون -->
+    <!-- اللوحة السفلية (التصميم الجديد) -->
     <div class="bottom-sheet flex-grow overflow-y-auto">
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">التحميل من:</label>
-            <input id="origin-input" type="text" placeholder="اكتب اسم المدينة (مثال: السادات)..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        
+        <!-- خانة التحميل -->
+        <div class="mb-5">
+            <label class="block text-sm font-bold text-gray-700 mb-2">نقطة التحميل</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </span>
+                <input id="origin-input" type="text" placeholder="اكتب اسم مدينة التحميل..." class="w-full pr-11 pl-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none font-semibold">
+            </div>
         </div>
 
+        <!-- خانة التنزيل -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">التنزيل إلى:</label>
-            <input id="destination-input" type="text" placeholder="اكتب اسم المدينة (مثال: الإسماعيلية)..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <label class="block text-sm font-bold text-gray-700 mb-2">نقطة التنزيل</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 right-0 flex items-center pr-4">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
+                </span>
+                <input id="destination-input" type="text" placeholder="اكتب اسم مدينة التنزيل..." class="w-full pr-11 pl-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none font-semibold">
+            </div>
         </div>
 
-        <button onclick="calculateRoute()" id="calc-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition duration-200">
-            حساب النولون
+        <!-- زر الحساب المطور -->
+        <button onclick="calculateRoute()" id="calc-btn" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg transform active:scale-95 transition-all flex justify-center items-center gap-2">
+            <span>احسب تكلفة النولون</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
         </button>
 
-        <!-- صندوق النتيجة -->
-        <div id="result-box" class="hidden mt-6 p-4 bg-gray-100 rounded-xl border border-gray-200">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">مسافة الرحلة:</span>
-                <span id="distance-val" class="font-bold text-gray-800">0 كم</span>
+        <!-- صندوق النتيجة الجديد (تصميم بطاقة) -->
+        <div id="result-box" class="hidden mt-6 p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-2 h-full bg-green-500"></div>
+            
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-gray-600 font-bold text-sm">مسافة الرحلة المُقدرة:</span>
+                <span id="distance-val" class="font-extrabold text-gray-800 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">0 كم</span>
             </div>
+            
+            <div class="h-px bg-green-200 w-full my-3"></div>
+            
             <div class="flex justify-between items-center">
-                <span class="text-gray-600">إجمالي نولون النقل:</span>
-                <span id="nolon-val" class="font-bold text-blue-600 text-xl">0 ج.م</span>
+                <span class="text-gray-700 font-bold">إجمالي النولون:</span>
+                <div class="flex items-end gap-1">
+                    <span id="nolon-val" class="font-black text-green-700 text-3xl">0</span>
+                    <span class="text-green-800 font-bold mb-1">ج.م</span>
+                </div>
             </div>
         </div>
+        
     </div>
 
+    <!-- السكربت البرمجي (نفس معادلاتك الدقيقة دون تغيير) -->
     <script>
         let map;
         
-        // تهيئة الخريطة فور تحميل الصفحة
         document.addEventListener("DOMContentLoaded", function() {
             try {
                 map = L.map('map', {zoomControl: false}).setView([29.0, 31.0], 5);
@@ -65,7 +119,7 @@
                     attribution: '© OpenStreetMap'
                 }).addTo(map);
             } catch(e) {
-                console.error("خطأ في تهيئة الخريطة:", e);
+                console.error("خطأ:", e);
             }
         });
 
@@ -73,32 +127,32 @@
             const origin = document.getElementById("origin-input").value.trim();
             const destination = document.getElementById("destination-input").value.trim();
             const btn = document.getElementById("calc-btn");
+            const btnText = btn.querySelector('span');
 
             if (!origin || !destination) {
-                alert("يرجى كتابة نقطة التحميل ونقطة التنزيل أولاً.");
+                alert("عفواً، يرجى كتابة نقطة التحميل ونقطة التنزيل أولاً.");
                 return;
             }
 
-            btn.innerText = "جاري الحساب ورسم الطريق...";
+            btnText.innerText = "جاري الحساب ورسم المسار...";
+            btn.classList.add("opacity-80", "cursor-wait");
             btn.disabled = true;
 
             try {
-                // البحث عن الإحداثيات
                 const getCoords = async (place) => {
                     const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + " مصر")}`);
                     const data = await res.json();
-                    if(data.length === 0) throw new Error(`لم نتمكن من العثور على: ${place}، يرجى كتابة الاسم بوضوح أكبر.`);
+                    if(data.length === 0) throw new Error(`لم نتمكن من العثور على: ${place}، يرجى مراجعة الاسم.`);
                     return { lat: data[0].lat, lon: data[0].lon };
                 };
 
                 const originCoords = await getCoords(origin);
                 const destCoords = await getCoords(destination);
 
-                // رسم المسار وحساب المسافة
                 const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${originCoords.lon},${originCoords.lat};${destCoords.lon},${destCoords.lat}?overview=full&geometries=geojson`);
                 const routeData = await routeRes.json();
 
-                if (routeData.code !== "Ok") throw new Error("حدث خطأ في قراءة شبكة الطرق بين المدينتين.");
+                if (routeData.code !== "Ok") throw new Error("حدث خطأ في قراءة الطريق السريع بين المدينتين.");
 
                 const distanceInKm = routeData.routes[0].distance / 1000;
                 
@@ -106,12 +160,11 @@
                 if (window.oMarker) map.removeLayer(window.oMarker);
                 if (window.dMarker) map.removeLayer(window.dMarker);
 
-                window.currentRoute = L.geoJSON(routeData.routes[0].geometry, { style: { color: '#2563eb', weight: 5 } }).addTo(map);
+                window.currentRoute = L.geoJSON(routeData.routes[0].geometry, { style: { color: '#2563eb', weight: 5, opacity: 0.8 } }).addTo(map);
                 window.oMarker = L.marker([originCoords.lat, originCoords.lon]).addTo(map);
                 window.dMarker = L.marker([destCoords.lat, destCoords.lon]).addTo(map);
                 map.fitBounds(window.currentRoute.getBounds(), { padding: [40, 40] });
 
-                // تطبيق معادلة التسعير
                 let basicNolon = 0;
                 if (distanceInKm <= 25) {
                     basicNolon = 1250;
@@ -132,15 +185,20 @@
                     }
                 }
 
-                // إظهار النتيجة
                 document.getElementById("distance-val").innerText = distanceInKm.toFixed(1) + " كم";
-                document.getElementById("nolon-val").innerText = Math.round(basicNolon) + " ج.م";
-                document.getElementById("result-box").classList.remove("hidden");
+                document.getElementById("nolon-val").innerText = Math.round(basicNolon).toLocaleString('ar-EG');
+                
+                // إظهار النتيجة بنعومة
+                const resultBox = document.getElementById("result-box");
+                resultBox.classList.remove("hidden");
+                resultBox.classList.add("animate-pulse");
+                setTimeout(() => resultBox.classList.remove("animate-pulse"), 500);
 
             } catch (error) {
                 alert("تنبيه: " + error.message);
             } finally {
-                btn.innerText = "حساب النولون";
+                btnText.innerText = "احسب تكلفة النولون";
+                btn.classList.remove("opacity-80", "cursor-wait");
                 btn.disabled = false;
             }
         }
