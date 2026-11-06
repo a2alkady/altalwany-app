@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مكتب التلواني للنقل</title>
+    <!-- مكتبة التصميم -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
+    <!-- مكتبات الخرائط المجانية (Leaflet) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: 50vh; width: 100%; }
-        .pac-container { z-index: 10000 !important; font-family: sans-serif; }
+        #map { height: 50vh; width: 100%; z-index: 1; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col h-screen">
@@ -26,15 +29,15 @@
         
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">التحميل من:</label>
-            <input id="origin-input" type="text" placeholder="ابحث عن موقع التحميل..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <input id="origin-input" type="text" placeholder="اكتب اسم المدينة (مثال: السادات)..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
 
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-1">التنزيل إلى:</label>
-            <input id="destination-input" type="text" placeholder="ابحث عن موقع التنزيل..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <input id="destination-input" type="text" placeholder="اكتب اسم المدينة (مثال: الإسماعيلية)..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
 
-        <button onclick="calculateRoute()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition duration-200">
+        <button onclick="calculateRoute()" id="calc-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition duration-200">
             حساب النولون
         </button>
 
@@ -51,86 +54,54 @@
         </div>
     </div>
 
-    <!-- سكربت خرائط جوجل وحساب التكلفة -->
     <script>
-        let map, directionsService, directionsRenderer;
-
+        let map;
+        
+        // تهيئة الخريطة المجانية وتوسيطها على مصر
         function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 30.3800, lng: 30.5100 },
-                zoom: 12,
-                disableDefaultUI: true
-            });
-
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer();
-            directionsRenderer.setMap(map);
-
-            new google.maps.places.Autocomplete(document.getElementById("origin-input"));
-            new google.maps.places.Autocomplete(document.getElementById("destination-input"));
+            map = L.map('map', {zoomControl: false}).setView([29.0, 31.0], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
         }
+        initMap();
 
-        function calculateRoute() {
+        async function calculateRoute() {
             const origin = document.getElementById("origin-input").value;
             const destination = document.getElementById("destination-input").value;
+            const btn = document.getElementById("calc-btn");
 
             if (!origin || !destination) {
-                alert("يرجى إدخال نقطة التحميل ونقطة التنزيل");
+                alert("يرجى كتابة نقطة التحميل ونقطة التنزيل بوضوح");
                 return;
             }
 
-            directionsService.route({
-                origin: origin,
-                destination: destination,
-                travelMode: google.maps.TravelMode.DRIVING,
-            }, (response, status) => {
-                if (status === "OK") {
-                    directionsRenderer.setDirections(response);
-                    
-                    const distanceInMeters = response.routes[0].legs[0].distance.value;
-                    const distanceInKm = distanceInMeters / 1000;
-                    
-                    let basicNolon = 0;
+            btn.innerText = "جاري الحساب...";
+            btn.disabled = true;
 
-                    // تطبيق شرائح التسعير الخاصة بمكتب التلواني
-                    if (distanceInKm <= 25) {
-                        basicNolon = 1250;
-                    } else if (distanceInKm <= 50) {
-                        basicNolon = 1800;
-                    } else if (distanceInKm <= 70) {
-                        basicNolon = 2800;
-                    } else if (distanceInKm <= 100) {
-                        basicNolon = 3000;
-                    } else if (distanceInKm <= 150) {
-                        basicNolon = 3300;
-                    } else {
-                        // للمسافات فوق 150 كم يتم التدرج وتقليل النولون مقاربةً بمتوسط 14 جنيه للكيلو
-                        const scalePrice = 3300 + ((distanceInKm - 150) / (1200 - 150)) * (17000 - 3300);
-                        
-                        // مسافة الذهاب والعودة مضروبة في 14 جنيه
-                        const avgPriceBy14 = (distanceInKm * 2) * 14; 
-                        
-                        // أخذ المتوسط بين معادلة النسبة والتناسب ومعادلة الـ 14 جنيه
-                        basicNolon = (scalePrice + avgPriceBy14) / 2;
-                        
-                        // ضبط السعر النهائي عند الوصول لمسافة 1200 كم ليكون 17000 جنيه كحد أقصى للرحلة
-                        if (distanceInKm >= 1200) {
-                            basicNolon = 17000;
-                        }
-                    }
+            try {
+                // البحث عن إحداثيات المدن المدخلة (مضاف لها كلمة مصر لزيادة دقة البحث)
+                const getCoords = async (place) => {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place + " مصر")}`);
+                    const data = await res.json();
+                    if(data.length === 0) throw new Error(`لم نتمكن من العثور على: ${place}، يرجى كتابة الاسم بوضوح أكبر.`);
+                    return { lat: data[0].lat, lon: data[0].lon };
+                };
 
-                    document.getElementById("distance-val").innerText = distanceInKm.toFixed(1) + " كم";
-                    document.getElementById("nolon-val").innerText = Math.round(basicNolon) + " ج.م";
-                    
-                    document.getElementById("result-box").classList.remove("hidden");
-                } else {
-                    alert("لم نتمكن من حساب المسار. تأكد من العناوين المدخلة.");
-                }
-            });
-        }
-    </script>
-    
-    <!-- ضع مفتاح API الخاص بك مكان YOUR_API_KEY -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
-</body>
-</html>
+                const originCoords = await getCoords(origin);
+                const destCoords = await getCoords(destination);
+
+                // رسم المسار وحساب الكيلومترات
+                const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${originCoords.lon},${originCoords.lat};${destCoords.lon},${destCoords.lat}?overview=full&geometries=geojson`);
+                const routeData = await routeRes.json();
+
+                if (routeData.code !== "Ok") throw new Error("حدث خطأ أثناء رسم المسار على الطريق.");
+
+                const distanceInKm = routeData.routes[0].distance / 1000;
+                
+                // تحديث الخريطة بالمسار الجديد
+                if (window.currentRoute) map.removeLayer(window.currentRoute);
+                if (window.oMarker) map.removeLayer(window.oMarker);
+                if (window.dMarker) map.removeLayer(window.dMarker);
+
+                window.currentRoute = L.geoJSON(routeData.routes[0].geometry, { style: { color: '#2563eb', weight: 5 } }).addTo(map);
