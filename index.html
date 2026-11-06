@@ -6,26 +6,27 @@
     <title>مكتب التلواني للنقل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
-    <!-- مكتبات الخرائط المجانية (نسخة مستقرة وسريعة) -->
+    <!-- مكتبات الخرائط المجانية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
         body { margin: 0; padding: 0; background-color: #f9fafb; display: flex; flex-direction: column; height: 100vh; }
-        #map { flex: 1; width: 100%; min-height: 40vh; z-index: 1; background-color: #e5e7eb; }
+        /* تم تصغير ارتفاع الخريطة هنا من 40vh إلى 30vh لتوفير مساحة أكبر للرأس ولوحة التحكم */
+        #map { flex: 1; width: 100%; min-height: 30vh; z-index: 1; background-color: #e5e7eb; }
         .bottom-sheet { z-index: 20; background: white; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <!-- الشعار والرأس -->
-    <header class="bg-white shadow-md py-4 text-center z-10">
+    <!-- الشعار والرأس (سيظل ظاهراً بوضوح) -->
+    <header class="bg-white shadow-md py-4 text-center z-10 relative">
         <h1 class="text-2xl font-bold text-gray-800">مكتب التلواني للنقل</h1>
     </header>
 
-    <!-- مساحة الخريطة -->
+    <!-- مساحة الخريطة المُصغرة -->
     <div id="map"></div>
 
     <!-- لوحة التحكم وحساب النولون -->
-    <div class="bottom-sheet">
+    <div class="bottom-sheet flex-grow overflow-y-auto">
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">التحميل من:</label>
             <input id="origin-input" type="text" placeholder="اكتب اسم المدينة (مثال: السادات)..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
